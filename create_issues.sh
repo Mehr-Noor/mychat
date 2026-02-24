@@ -7,7 +7,7 @@ REPO="Mehr-Noor/mychat"        # تغییر بده به OWNER/REPO خودت
 ASSIGNEE="Mehr-Noor"           # تغییر بده به GitHub username خودت
 
 # =============================
-# LABELS (تمامی labels مورد نیاز)
+# LABELS
 # =============================
 labels=("epic" "task" "backend" "ai" "priority-critical")
 
@@ -28,9 +28,6 @@ epics["EPIC 2"]="LLM Engine Layer|Tasks related to model loading, streaming, inf
 epics["EPIC 3"]="Database & Session Management|Design DB schema, session CRUD, message CRUD, tests."
 epics["EPIC 4"]="FastAPI Backend|Endpoints, streaming, CORS, error handling, logging."
 epics["EPIC 5"]="React Frontend|UI components, multi-session support, streaming, sidebar."
-epics["EPIC 6"]="Context & Memory Management|Recent messages, context building, summarization."
-epics["EPIC 7"]="Security Hardening|Offline only, DB encryption, CORS, rate limiter."
-epics["EPIC 8"]="Dockerization|Containerization, GPU support, volume mounting."
 
 declare -A epic_ids
 
@@ -53,96 +50,49 @@ for key in "${!epics[@]}"; do
 done
 
 # =============================
-# TASKS (Phase 1)
+# TASKS per Epic with numbering
 # =============================
 declare -A tasks
-tasks["Install WSL2"]="## Description
-Install WSL2 and Ubuntu on Windows.
+# Format: tasks["EpicKey"]="Task1|Task2|Task3"
+tasks["EPIC 1"]="Install WSL2|Install Python & venv|Install CUDA & Drivers|Install Python Packages"
+tasks["EPIC 2"]="Download & Test Mistral 7B|Create llm_engine module"
+tasks["EPIC 3"]="Create SQLAlchemy models"
+tasks["EPIC 4"]="Create FastAPI endpoints"
+tasks["EPIC 5"]="Setup React Frontend"
 
-## Acceptance Criteria
-- Ubuntu terminal works
-- Can run bash commands
-Epic: EPIC 1"
-tasks["Install Python & venv"]="## Description
-Install Python 3.11 and create virtual environment.
+# Example: Description & Acceptance Criteria (simple for demo)
+declare -A task_descriptions
+task_descriptions["Install WSL2"]="## Description\nInstall WSL2 and Ubuntu on Windows.\n\n## Acceptance Criteria\n- Ubuntu terminal works\n- Can run bash commands"
+task_descriptions["Install Python & venv"]="## Description\nInstall Python 3.11 and create virtual environment.\n\n## Acceptance Criteria\n- Python 3.11 installed\n- venv works"
+task_descriptions["Install CUDA & Drivers"]="## Description\nInstall NVIDIA CUDA toolkit and drivers for GPU.\n\n## Acceptance Criteria\n- nvidia-smi shows GPU\n- PyTorch CUDA available"
+task_descriptions["Install Python Packages"]="## Description\nInstall PyTorch, Transformers, bitsandbytes, accelerate.\n\n## Acceptance Criteria\n- Imports work\n- torch.cuda.is_available() == True"
+task_descriptions["Download & Test Mistral 7B"]="## Description\nDownload Mistral 7B Instruct 4bit and run test script.\n\n## Acceptance Criteria\n- Model loads on GPU\n- Generates output"
+task_descriptions["Create llm_engine module"]="## Description\nImplement model loading and generate() function.\n\n## Acceptance Criteria\n- Streaming generation works\n- Configurable temperature & max_tokens"
+task_descriptions["Create SQLAlchemy models"]="## Description\nCreate ChatSession and Message tables.\n\n## Acceptance Criteria\n- Tables created\n- CRUD works"
+task_descriptions["Create FastAPI endpoints"]="## Description\nEndpoints: create-session, list-sessions, chat, delete-session.\n\n## Acceptance Criteria\n- Each endpoint tested\n- Streaming response works"
+task_descriptions["Setup React Frontend"]="## Description\nInitialize Vite project and create basic UI.\n\n## Acceptance Criteria\n- Frontend starts\n- Can send requests to backend"
 
-## Acceptance Criteria
-- Python 3.11 installed
-- venv works
-Epic: EPIC 1"
-tasks["Install CUDA & Drivers"]="## Description
-Install NVIDIA CUDA toolkit and drivers for GPU.
-
-## Acceptance Criteria
-- nvidia-smi shows GPU
-- PyTorch CUDA available
-Epic: EPIC 1"
-tasks["Install Python Packages"]="## Description
-Install PyTorch, Transformers, bitsandbytes, accelerate.
-
-## Acceptance Criteria
-- Imports work
-- torch.cuda.is_available() == True
-Epic: EPIC 1"
-tasks["Download & Test Mistral 7B"]="## Description
-Download Mistral 7B Instruct 4bit and run test script.
-
-## Acceptance Criteria
-- Model loads on GPU
-- Generates output
-Epic: EPIC 2"
-tasks["Create llm_engine module"]="## Description
-Implement model loading and generate() function.
-
-## Acceptance Criteria
-- Streaming generation works
-- Configurable temperature & max_tokens
-Epic: EPIC 2"
-tasks["Create SQLAlchemy models"]="## Description
-Create ChatSession and Message tables.
-
-## Acceptance Criteria
-- Tables created
-- CRUD works
-Epic: EPIC 3"
-tasks["Create FastAPI endpoints"]="## Description
-Endpoints: create-session, list-sessions, chat, delete-session.
-
-## Acceptance Criteria
-- Each endpoint tested
-- Streaming response works
-Epic: EPIC 4"
-tasks["Setup React Frontend"]="## Description
-Initialize Vite project and create basic UI.
-
-## Acceptance Criteria
-- Frontend starts
-- Can send requests to backend
-Epic: EPIC 5"
-
-echo "Creating Tasks..."
-for key in "${!tasks[@]}"; do
-  title="[Task] $key"
-  body="${tasks[$key]}"
-  
-  # استخراج Epic برای لینک
-  epic_key=$(echo "$body" | grep "Epic:" | awk -F': ' '{print $2}')
+echo "Creating Tasks with numbering..."
+for epic_key in "${!tasks[@]}"; do
+  IFS='|' read -ra task_list <<< "${tasks[$epic_key]}"
   epic_number=${epic_ids[$epic_key]}
-  
-  # اضافه کردن Epic لینک
-  body=$(echo "$body" | sed "/Epic:/d")   # حذف خط Epic از متن
-  body="$body
+  count=1
+  for task in "${task_list[@]}"; do
+    title="[Task $count] $task"
+    body="${task_descriptions[$task]}
 
 Related Epic: #$epic_number"
-  
-  gh issue create \
-    --title "$title" \
-    --body "$body" \
-    --label "task,backend,ai,priority-critical" \
-    --assignee "$ASSIGNEE" \
-    --repo "$REPO"
     
-  echo "Created Task: $title linked to Epic #$epic_number"
+    gh issue create \
+      --title "$title" \
+      --body "$body" \
+      --label "task,backend,ai,priority-critical" \
+      --assignee "$ASSIGNEE" \
+      --repo "$REPO"
+    
+    echo "Created Task: $title linked to Epic #$epic_number"
+    ((count++))
+  done
 done
 
 echo "All Epics and Tasks have been created successfully!"
