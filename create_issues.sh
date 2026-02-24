@@ -4,7 +4,7 @@
 # CONFIGURATION
 # =============================
 REPO="Mehr-Noor/mychat"        # تغییر بده به OWNER/REPO خودت
-ASSIGNEE="Mehr-Noor"           # تغییر بده به GitHub username خودت
+ASSIGNEE="Mehr-Noor"           # GitHub username خودت
 
 # =============================
 # LABELS
@@ -20,79 +20,87 @@ for label in "${labels[@]}"; do
 done
 
 # =============================
-# EPICS
+# EPICS (ترتیب مهم است)
 # =============================
 declare -A epics
-epics["EPIC 1"]="Environment Setup|Setup WSL2, Python environment, CUDA, dependencies, and folder structure."
-epics["EPIC 2"]="LLM Engine Layer|Tasks related to model loading, streaming, inference logic, and GPU memory."
-epics["EPIC 3"]="Database & Session Management|Design DB schema, session CRUD, message CRUD, tests."
-epics["EPIC 4"]="FastAPI Backend|Endpoints, streaming, CORS, error handling, logging."
-epics["EPIC 5"]="React Frontend|UI components, multi-session support, streaming, sidebar."
+epics["EPIC 0"]="Environment Setup|Setup WSL2, Python environment, CUDA, dependencies, and folder structure."
+epics["EPIC 1"]="LLM Engine Layer|Tasks related to model loading, streaming, inference logic, and GPU memory."
+epics["EPIC 2"]="Database & Session Management|Design DB schema, session CRUD, message CRUD, tests."
+epics["EPIC 3"]="FastAPI Backend|Endpoints, streaming, CORS, error handling, logging."
+epics["EPIC 4"]="React Frontend|UI components, multi-session support, streaming, sidebar."
 
+epic_order=("EPIC 0" "EPIC 1" "EPIC 2" "EPIC 3" "EPIC 4")
 declare -A epic_ids
 
-echo "Creating Epics..."
-for key in "${!epics[@]}"; do
-  title="[$key] ${epics[$key]%%|*}"
-  body="${epics[$key]#*|}"
-  
-  # ایجاد Epic
-  issue_number=$(gh issue create \
-    --title "$title" \
-    --body "## Description\n$body" \
-    --label "epic,backend,ai,priority-critical" \
-    --assignee "$ASSIGNEE" \
-    --repo "$REPO" \
-    --json number | jq -r '.number')
-  
-  epic_ids["$key"]=$issue_number
-  echo "Created Epic: $title #$issue_number"
-done
-
 # =============================
-# TASKS per Epic with numbering
+# TASKS per Epic
 # =============================
 declare -A tasks
-# Format: tasks["EpicKey"]="Task1|Task2|Task3"
-tasks["EPIC 1"]="Install WSL2|Install Python & venv|Install CUDA & Drivers|Install Python Packages"
-tasks["EPIC 2"]="Download & Test Mistral 7B|Create llm_engine module"
-tasks["EPIC 3"]="Create SQLAlchemy models"
-tasks["EPIC 4"]="Create FastAPI endpoints"
-tasks["EPIC 5"]="Setup React Frontend"
+tasks["EPIC 0"]="Install WSL2|Install Python & venv|Install CUDA & Drivers|Install Python Packages"
+tasks["EPIC 1"]="Download & Test Mistral 7B|Create llm_engine module"
+tasks["EPIC 2"]="Create SQLAlchemy models"
+tasks["EPIC 3"]="Create FastAPI endpoints"
+tasks["EPIC 4"]="Setup React Frontend"
 
-# Example: Description & Acceptance Criteria (simple for demo)
+# Description & Acceptance Criteria
 declare -A task_descriptions
-task_descriptions["Install WSL2"]="## Description\nInstall WSL2 and Ubuntu on Windows.\n\n## Acceptance Criteria\n- Ubuntu terminal works\n- Can run bash commands"
-task_descriptions["Install Python & venv"]="## Description\nInstall Python 3.11 and create virtual environment.\n\n## Acceptance Criteria\n- Python 3.11 installed\n- venv works"
-task_descriptions["Install CUDA & Drivers"]="## Description\nInstall NVIDIA CUDA toolkit and drivers for GPU.\n\n## Acceptance Criteria\n- nvidia-smi shows GPU\n- PyTorch CUDA available"
-task_descriptions["Install Python Packages"]="## Description\nInstall PyTorch, Transformers, bitsandbytes, accelerate.\n\n## Acceptance Criteria\n- Imports work\n- torch.cuda.is_available() == True"
-task_descriptions["Download & Test Mistral 7B"]="## Description\nDownload Mistral 7B Instruct 4bit and run test script.\n\n## Acceptance Criteria\n- Model loads on GPU\n- Generates output"
-task_descriptions["Create llm_engine module"]="## Description\nImplement model loading and generate() function.\n\n## Acceptance Criteria\n- Streaming generation works\n- Configurable temperature & max_tokens"
-task_descriptions["Create SQLAlchemy models"]="## Description\nCreate ChatSession and Message tables.\n\n## Acceptance Criteria\n- Tables created\n- CRUD works"
-task_descriptions["Create FastAPI endpoints"]="## Description\nEndpoints: create-session, list-sessions, chat, delete-session.\n\n## Acceptance Criteria\n- Each endpoint tested\n- Streaming response works"
-task_descriptions["Setup React Frontend"]="## Description\nInitialize Vite project and create basic UI.\n\n## Acceptance Criteria\n- Frontend starts\n- Can send requests to backend"
+task_descriptions["Install WSL2"]="Initialize WSL2 and Ubuntu on Windows.\n\n## Acceptance Criteria\n- Ubuntu terminal works\n- Can run bash commands"
+task_descriptions["Install Python & venv"]="Install Python 3.11 and create virtual environment.\n\n## Acceptance Criteria\n- Python 3.11 installed\n- venv works"
+task_descriptions["Install CUDA & Drivers"]="Install NVIDIA CUDA toolkit and drivers.\n\n## Acceptance Criteria\n- nvidia-smi shows GPU\n- PyTorch CUDA available"
+task_descriptions["Install Python Packages"]="Install PyTorch, Transformers, bitsandbytes, accelerate.\n\n## Acceptance Criteria\n- Imports work\n- torch.cuda.is_available() == True"
+task_descriptions["Download & Test Mistral 7B"]="Download Mistral 7B Instruct 4bit and run test script.\n\n## Acceptance Criteria\n- Model loads on GPU\n- Generates output"
+task_descriptions["Create llm_engine module"]="Implement model loading and generate() function.\n\n## Acceptance Criteria\n- Streaming generation works\n- Configurable temperature & max_tokens"
+task_descriptions["Create SQLAlchemy models"]="Create ChatSession and Message tables.\n\n## Acceptance Criteria\n- Tables created\n- CRUD works"
+task_descriptions["Create FastAPI endpoints"]="Endpoints: create-session, list-sessions, chat, delete-session.\n\n## Acceptance Criteria\n- Each endpoint tested\n- Streaming response works"
+task_descriptions["Setup React Frontend"]="Initialize Vite project and create basic UI.\n\n## Acceptance Criteria\n- Frontend starts\n- Can send requests to backend"
 
-echo "Creating Tasks with numbering..."
-for epic_key in "${!tasks[@]}"; do
-  IFS='|' read -ra task_list <<< "${tasks[$epic_key]}"
-  epic_number=${epic_ids[$epic_key]}
-  count=1
-  for task in "${task_list[@]}"; do
-    title="[Task $count] $task"
-    body="${task_descriptions[$task]}
+# =============================
+# CREATE EPICS AND TASKS
+# =============================
+task_counter=1
 
-Related Epic: #$epic_number"
-    
-    gh issue create \
-      --title "$title" \
-      --body "$body" \
-      --label "task,backend,ai,priority-critical" \
-      --assignee "$ASSIGNEE" \
-      --repo "$REPO"
-    
-    echo "Created Task: $title linked to Epic #$epic_number"
-    ((count++))
-  done
+for epic_key in "${epic_order[@]}"; do
+    # ایجاد Epic
+    epic_title="[${epic_key}] ${epics[$epic_key]%%|*}"
+    epic_body="${epics[$epic_key]#*|}"
+
+    epic_number=$(gh issue create \
+        --title "$epic_title" \
+        --body "$(cat <<EOF
+## Description
+$epic_body
+EOF
+)" \
+        --label "epic,backend,ai,priority-critical" \
+        --assignee "$ASSIGNEE" \
+        --repo "$REPO" \
+        --json number | jq -r '.number')
+
+    epic_ids[$epic_key]=$epic_number
+    echo "Created Epic: $epic_title #$epic_number"
+
+    # ایجاد Tasks مربوط به Epic
+    IFS='|' read -ra task_list <<< "${tasks[$epic_key]}"
+    for task in "${task_list[@]}"; do
+        task_title="[Task $task_counter] $task"
+        task_body="${task_descriptions[$task]}"
+
+        gh issue create \
+            --title "$task_title" \
+            --body "$(cat <<EOF
+## Description
+$task_body
+
+Related Epic: #$epic_number
+EOF
+)" \
+            --label "task,backend,ai,priority-critical" \
+            --assignee "$ASSIGNEE" \
+            --repo "$REPO"
+
+        echo "Created Task: $task_title linked to Epic #$epic_number"
+        ((task_counter++))
+    done
 done
 
-echo "All Epics and Tasks have been created successfully!"
+echo "All Epics and Tasks created successfully!"
